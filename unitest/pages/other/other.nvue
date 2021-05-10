@@ -1,0 +1,45 @@
+<template>
+	<view>
+		<page-head title="head"></page-head>
+		<view></view>
+		  <text @click="myclick()">登陆看视频</text>
+		  <text @click="myclick2()" v-if="false">广告接入</text>
+		<page-foot title="foot"></page-foot>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				
+			}
+		},
+		methods: {
+			myclick(){
+				uni.navigateTo({
+					url:"/pages/API/pull-down-refresh/pull-down-refresh", 
+					fail(e) {
+						console.log(e)
+					}
+				})
+				
+				// uni.switchTab({
+				// 	url:"/pages/login/login"
+				// })
+			}, 
+			myclick2(){
+				uni.navigateTo({
+					url:"/pages/API/rewarded-video-ad/rewarded-video-ad", 
+					fail(e) {
+						console.log(e)
+					}
+			})
+			}
+		}
+	}
+</script>
+
+<style>
+
+</style>
