@@ -1,29 +1,54 @@
 <template>
-    <view>
         <view class="uni-padding-wrap uni-common-mt" >
-			<video class="video" :id="vediodata.id" :ref="vediodata.id" :src="vediodata.src" :controls="true" :loop="true"
-							    :show-center-play-btn="false" > 
-			</video>
-            <button v-if="!loadError" :loading="loading" :disabled="loading" type="primary" class="btn" @click="show">显示广告</button>
-            <button v-if="loadError" :loading="loading" :disabled="loading" type="primary" class="btn" @click="reloadAd">重新加载广告</button>
-        </view>
-        <!-- #ifndef APP-PLUS -->
-        <view class="ad-tips">
-            <text>小程序端的广告ID由小程序平台提供</text>
-        </view>
-        <!-- #endif -->
-    </view>
+			<rich-text :nodes="vediodata.title" style="word-break:break-all;"></rich-text>
+			<div style="margin: 0; padding: 0;" @tap="viewTab">
+				<video  class="video" :id="vediodata.id" :ref="vediodata.id" :src="vediodata.src" :controls="true" :loop="true"
+									:show-center-play-btn="false" > 
+				</video> 
+			</div>
+			<button @tap="share(['shareAppMessage','shareTimeline'])" open-type="share">分享给好友</button>
+<!--            <button v-if="!loadError" :loading="loading" :disabled="loading" type="primary" class="btn" @click="show">显示广告</button>
+            <button v-if="loadError" :loading="loading" :disabled="loading" type="primary" class="btn" @click="reloadAd">重新加载广告</button> -->		
+			
+			<view class="uni-list">
+				<block v-for="item in data" :key="item.id">
+					<view class="uni-list-cell" hover-class="uni-list-cell-hover" @click="imgclick(item)">
+						<view class="uni-media-list">
+							<image class="uni-media-list-logo" :src="item.imgsrc"></image>
+							 <view class="uni-media-list-body">
+								<view class="uni-media-list-text-top">
+									<rich-text  :nodes="item.title" style="word-break:break-all;"></rich-text>
+								</view>
+								<view class="uni-media-list-text-bottom">
+									<text >播放次数：{{item.playcnt}}</text>
+								</view>
+							</view>
+						</view>
+					</view>
+				</block>
+			</view>
+			<view class="uni-loadmore" v-if="showLoadMore">{{loadMoreText}}</view>
+		</view>
+
 </template>
 
 <script>
+	import {
+		mapState,
+		mapMutations,
+		mapActions
+	} from 'vuex'
     const ERROR_CODE = [-5001, -5002, -5003, -5004, -5005, -5006];
 
     export default {
         data() {
             return {
+				data: [],
 				vediodata:{},
                 loading: false,
-                loadError: false
+                loadError: false,
+				loadMoreText: "加载中...",
+				showLoadMore: false
             }
         },
         onReady() {
@@ -36,14 +61,41 @@
             this.adOption = {
                 adUnitId: ''
             };
+			 this.createAd();
             // #endif
-            this.createAd();
         },
+		computed: {
+			...mapState(['activeOpen'])
+		},
 		onLoad(option) {
-			this.vediodata = option;  
-			console.log("opt?="+ this.vediodata.src);
+			this.vediodata = this.activeOpen;  
+			this.initData();
+			//console.log("opt?="+ this.vediodata.src);
+		},
+		onUnload() {
+			this.max = 0,
+			this.data = [],
+			this.loadMoreText = "加载更多",
+			this.showLoadMore = false;
+		},
+		onReachBottom() {
+			console.log("onReachBottom");
+			if (this.max > 40) {
+				this.loadMoreText = "没有更多数据了!"
+				return;
+			}
+			this.showLoadMore = true;
+			setTimeout(() => {
+				this.setListData();
+			}, 300);
+		},
+		onPullDownRefresh() {
+			console.log('onPullDownRefresh');
+			let tt=Math.floor((Math.random()*4)+1);
+			this.initData(tt*10);
 		},
         methods: {
+			...mapMutations(['setActiveOpen']),
             createAd() {
                 var rewardedVideoAd = this.rewardedVideoAd = uni.createRewardedVideoAd(this.adOption);
                 rewardedVideoAd.onLoad(() => {
@@ -78,7 +130,26 @@
                     console.log('onError event', err)
                 });
                 this.loading = true;
+				
             },
+			viewTab(e) {
+				//console.log("viewTab x"+e.touches[0].clientX+"y:"+e.touches[0].clientY)
+				//console.log("viewTab x"+event.offsetX+"  y:"+event.offsetY)
+				console.log("viewTab x"+(e.detail.x-e.target.offsetLeft) +"  y:"+(e.detail.y-e.target.offsetLeft))
+				
+			},
+			async share(e) {
+				wx.showShareMenu({
+				  withShareTicket: true,
+				  menus: e,
+				  success: (res) => {
+				  	console.log("success"+res);
+				  },
+				  fail:(res)=>{
+					  console.log(res);
+				  }
+				})
+			},
             show() {
                 const rewardedVideoAd = this.rewardedVideoAd;
                 rewardedVideoAd.show().catch(() => {
@@ -97,7 +168,52 @@
             reloadAd() {
                 this.loading = true;
                 this.rewardedVideoAd.load();
-            }
+            },
+			setListData() {
+				let page= this.max+1;
+				let requrl="https://www.xuechegoo.com/api/video/recommend?page="+page;
+				console.log("requre url"+requrl);
+				uni.request({
+					url:requrl,
+					success:(res)=>{
+						if(res.statusCode!=200){
+							this.loadMoreText = "服务器维护中!"
+							this.showLoadMore = true;
+							return;
+						}
+						//console.log(res);
+						if(res.data.length>0)
+							this.data = this.data.concat(res.data);
+						if(res.data.length<10)
+							this.loadMoreText = "没有更多数据了!"
+						this.max = this.max+1;
+					},
+					fail:(res)=>{
+						this.loadMoreText = res
+					}
+				});
+			},
+			initData(max){
+				setTimeout(() => {
+					if(!max) max=0;
+					this.max = max;
+					this.data = [];
+					this.setListData();
+					uni.stopPullDownRefresh();
+				}, 300);
+			},
+			imgclick(it){
+				let newurl="/pages/API/rewarded-video-ad/rewarded-video-ad"
+				//this.activeOpen=it;
+				this.setActiveOpen(it);
+				console.log("newurl"+newurl);
+				uni.redirectTo({
+						url:newurl,
+						fail(e) {
+							console.log(e)
+						}
+				})
+			}
         }
     }
 </script>
@@ -105,7 +221,7 @@
 <style>
 	.uni-common-mt{
 		text-align: center;
-			}
+	}
     .btn {
         margin-bottom: 20px;
     }
@@ -119,5 +235,20 @@
 	    flex: 1;
 	    width: 100%;
 		height: 500rpx;
+	}
+	.uni-media-list{
+		padding: 5px 10px;
+	}
+	.uni-media-list-logo{
+		height: 120rpx;
+		width: 165rpx;
+		margin-right: 20rpx;
+	}
+	.uni-media-list-body {
+		height: auto;
+		justify-content: space-around;
+	}
+	.uni-media-list-text-bottom{
+		text-align: left;
 	}
 </style>

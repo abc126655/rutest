@@ -1,18 +1,25 @@
 <template>
 		<view class="uni-padding-wrap uni-common-mt">
-			<view style="font-size: 12px; color: #666;">{{title}}</view>
-			<view class="text" v-for="item in data" :key="item.id">
-				<rich-text :nodes="item.tittle"></rich-text>
+			<view class="text" v-for="item,index in data" :key="item.id">
+				<rich-text :nodes="item.title" style="word-break:break-all;"></rich-text>
 			    <image class="img" :src="item.imgsrc" @click="imgclick(item )"></image>
+				<view style="display: flex;">
+					<text style="font-size: small;margin-top: 10rpx;">播放次数：{{item.playcnt}}</text>
+					<button :data-name="index" style="width: 300rpx; margin-right: 20rpx;"  open-type="share">分享给好友</button>
+				</view>
 			</view> 
 			<view class="uni-loadmore" v-if="showLoadMore">{{loadMoreText}}</view>
 		</view>
 </template>
 <script>
+	import {
+		mapState, 
+		mapMutations,
+		mapActions
+	} from 'vuex'
 	export default {
 		data() {
 			return {
-				title: '下拉刷新 + 加载更多',
 				data: [],
 				loadMoreText: "加载中...",
 				showLoadMore: false,
@@ -30,10 +37,6 @@
 		},
 		onReachBottom() {
 			console.log("onReachBottom");
-			if (this.max > 40) {
-				this.loadMoreText = "没有更多数据了!"
-				return;
-			}
 			this.showLoadMore = true;
 			setTimeout(() => {
 				this.setListData();
@@ -41,14 +44,33 @@
 		},
 		onPullDownRefresh() {
 			console.log('onPullDownRefresh');
-			let tt=Math.floor((Math.random()*4)+1);
-			this.initData(tt*10);
+			let tt=Math.floor((Math.random()*10)+1);
+			this.initData(tt);
+		},
+		onShareAppMessage(options) {
+			let inde=  0;
+			if( options.from == 'button' ){
+			　　　　var eData = options.target.dataset;
+				   inde=eData.name
+			　　　　console.log("onShareAppMessage"+inde) 
+			}
+			let it=  this.data[inde];
+			this.setActiveOpen(it);
+			let newurl="/pages/API/rewarded-video-ad/rewarded-video-ad?src="+it.src;
+			console.log("share newurl"+newurl);
+			return {
+			  title:it.title,
+			  path: newurl,
+			  imageUrl:it.imgsrc
+			}
 		},
 		methods: {
+			...mapMutations(['setActiveOpen']),
 			imgclick(it){
-				let newurl="/pages/API/rewarded-video-ad/rewarded-video-ad?src="+it.src;
-				newurl= newurl+"&id="+it.id;
-				console.log("newurl"+newurl);
+				this.setActiveOpen(it);
+				// let newurl="/pages/API/rewarded-video-ad/rewarded-video-ad?src="+it.src;
+				// newurl= newurl+"&id="+it.id;
+				let newurl="/pages/API/rewarded-video-ad/rewarded-video-ad";
 				uni.navigateTo({
 						url:newurl,
 						fail(e) {
@@ -57,17 +79,28 @@
 				})
 			},
 			setListData() {
-				let data = [];
-				this.max += 10;
-				for (var i = this.max - 9; i < this.max + 1; i++) {
-					let it={};
-					it.id="vedi"+i;
-					it.tittle="<h4> tittle--"+i+"</h4>";
-					it.imgsrc='/static/img.png'
-					it.src='https://img.cdn.aliyun.dcloud.net.cn/guide/uniapp/hellouniapp/hello-nvue-swiper-vertical-0'+i+'.mp4';
-					data.push(it)
-				}
-				this.data = this.data.concat(data);
+				let page= this.max+1;
+				let requrl="https://www.xuechegoo.com/api/video/list?page="+page;
+				console.log("requre url"+requrl);
+				uni.request({
+					url:requrl,
+					success:(res)=>{
+						if(res.statusCode!=200){
+							this.loadMoreText = "服务器维护中!"
+							this.showLoadMore = true;
+							return;
+						}
+						//console.log(res);
+						if(res.data.length>0)
+							this.data = this.data.concat(res.data);
+						if(res.data.length<10)
+							this.loadMoreText = "没有更多数据了!"
+						this.max = this.max+1;
+					},
+					fail:(res)=>{
+						this.loadMoreText = res
+					}
+				});
 			},
 			initData(max){
 				setTimeout(() => {
@@ -86,18 +119,17 @@
 	.uni-padding-wrap{
 		background-color: #c8c0c4;
 		margin-top: 0;
-		padding: 0  5rpx;
+		padding: 10rpx  5rpx;
 	},
 	.text {
-		margin: 16rpx 0;
-		padding: 10rpx 0;
-		width:100%;
+		margin: 20rpx 0;
+		padding: 10rpx;
+		width:97%;
 		background-color: #fff;
-		text-align: center;
-		border-radius: 8rpx;
+		border-radius: 10rpx;
 	},
 	.img{
-		width: 100%;
-		margin: 0px 0;
+		width: 97%;
+		margin: 5rpx 0;
 	}
 </style>

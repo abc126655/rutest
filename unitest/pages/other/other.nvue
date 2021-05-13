@@ -3,7 +3,8 @@
 		<page-head title="head"></page-head>
 		<view></view>
 		  <text @click="myclick()">登陆看视频</text>
-		  <text @click="myclick2()" v-if="false">广告接入</text>
+		  <br><br>
+		  <text @click="myclick2()" v-if="true">广告接入</text>
 		<page-foot title="foot"></page-foot>
 	</view>
 </template>

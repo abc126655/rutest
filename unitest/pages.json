@@ -1,83 +1,21 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": "uni--首页"
-			}
-		},
-		{
-            "path" : "pages/other/other",
-            "style" :                                                                                    
-            {
-                "navigationBarTitleText": "第二页",
-                "enablePullDownRefresh": false
-            }    
-        },
-		{
-		    "path" : "pages/login/login",
-		    "style" :                                                                                    
-		    {
-		        "navigationBarTitleText": "登陆",
-		        "enablePullDownRefresh": false
-		    }    
-		},
-		{
-			"path": "pages/component/view/view",
-			"style": {
-				"navigationBarTitleText": "view"
-			}
-		},
-		{
-			"path": "pages/component/scroll-view/scroll-view",
-			"style": {
-				"navigationBarTitleText": "scroll-view"
-			}
-		},
-		{
-			"path": "pages/component/swiper/swiper",
-			"style": {
-				"navigationBarTitleText": "swiper"
-			}
-		},
-		{
-			"path": "pages/API/rewarded-video-ad/rewarded-video-ad",
-			"style": {
-				"navigationBarTitleText": "swiper"
-			}
-		},
-		{
             "path" : "pages/API/pull-down-refresh/pull-down-refresh",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "视频播放",
+                "navigationBarTitleText": "首页",
                 "enablePullDownRefresh": true
             }
-        }
-    ],
-	"tabBar": {
-		"color": "#7A7E83",
-		"selectedColor": "#007AFF",
-		"borderStyle": "black",
-		"backgroundColor": "#F8F8F8",
-		"list": [{
-				"pagePath": "pages/index/index",
-				"iconPath": "static/extui.png",
-				"selectedIconPath": "static/extuiHL.png",
-				"text": "首页"
-			}, {
-				"pagePath": "pages/other/other",
-				"iconPath": "static/template.png",
-				"selectedIconPath": "static/templateHL.png",
-				"text": "其它页"
-			}, {
-				"pagePath": "pages/login/login",
-				"iconPath": "static/template.png",
-				"selectedIconPath": "static/templateHL.png",
-				"text": "关于我"
+        },
+		{
+			"path": "pages/API/rewarded-video-ad/rewarded-video-ad",
+			"style": {
+				"navigationBarTitleText": "视频播放",
+				 "enablePullDownRefresh": false
 			}
-		]
-	},
+		}
+    ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",
